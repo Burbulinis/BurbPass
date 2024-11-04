@@ -1,0 +1,4 @@
+name: BurbPass
+main: me.burb.burbpass.BurbPass
+version: 1.0
+api-version: '1.20'
