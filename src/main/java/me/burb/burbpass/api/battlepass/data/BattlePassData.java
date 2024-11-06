@@ -1,42 +1,53 @@
 package me.burb.burbpass.api.battlepass.data;
 
-import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
 public class BattlePassData {
 
-    private static HashMap<Integer, ItemStack> rewards = new HashMap<>();
+    private static final HashMap<Integer, ItemStack> REWARDS = new HashMap<>();
+    private static final HashMap<UUID, BattlePassData> DATA = new HashMap<>();
 
     private final UUID uuid;
 
     private int level;
     private float progress;
-    private List<Integer> rewardsClaimed;
+    private final List<Integer> rewardsClaimed;
 
-    public BattlePassData(UUID uuid, int level, float progress, List<Integer> rewardsClaimed) {
+    private BattlePassData(UUID uuid, int level, float progress, List<Integer> rewardsClaimed) {
         this.uuid = uuid;
         this.level = level;
         this.progress = progress;
         this.rewardsClaimed = rewardsClaimed;
+        DATA.put(uuid, this);
+    }
+
+    public static BattlePassData getDataOrDefault(UUID uuid) {
+        if (!DATA.containsKey(uuid)) return new BattlePassData(uuid, 0, 0, null);
+        return DATA.get(uuid);
+    }
+
+    public static HashMap<UUID, BattlePassData> getAllData() {
+        return DATA;
+    }
+
+    public static void setReward(int key, ItemStack item) {
+        REWARDS.put(key, item);
     }
 
     @Nullable
     public static ItemStack getReward(int key) {
-        return rewards.get(key);
+        return REWARDS.get(key);
     }
 
     public static HashMap<Integer, ItemStack> getRewards() {
-        return rewards;
+        return REWARDS;
     }
 
-    public Player getPlayer() {
-        return Bukkit.getOfflinePlayer(uuid).getPlayer();
+    public UUID getUUID() {
+        return uuid;
     }
 
     public int getLevel() {
@@ -59,13 +70,17 @@ public class BattlePassData {
 
         return percent;
     }
+    public boolean isClaimed(int level) {
+        if (rewardsClaimed == null) return false;
+        return rewardsClaimed.contains(level);
+    }
 
-    public List<Integer> getRewardsClaimed() {
+    public List<Integer> getClaimedRewards() {
         return rewardsClaimed;
     }
 
-    public void setReward(int key, ItemStack item) {
-        rewards.put(key, item);
+    public static void removeReward(int key) {
+        REWARDS.remove(key);
     }
 
     public void setLevel(short level) {
@@ -74,20 +89,30 @@ public class BattlePassData {
     }
 
     public void setProgress(float progress) {
-        this.progress = progress; // lvl 5 = 1600
+        this.progress = progress;
         level = (int) Math.floor(Math.sqrt((double) progress / 64));
     }
 
-    public void setRewardsClaimed(boolean claimed, int... rewardsClaimed) {
-        for (int i : rewardsClaimed) {
-            if (this.rewardsClaimed.get(i) != null) { return; }
+    public void addClaimedReward(int... rewardsClaimed) {
+        for (int i : rewardsClaimed) this.rewardsClaimed.add(i-1);
+    }
 
-            if (claimed) { this.rewardsClaimed.add(i); }
-            else { this.rewardsClaimed.remove(i); }
-        }
+    public void removeClaimedReward(int... rewardsClaimed) {
+        for (int i : rewardsClaimed) this.rewardsClaimed.remove(i-1);
+    }
+
+    public void reset() {
+        level = 0;
+        progress = 0f;
+        rewardsClaimed.clear();
+    }
+
+    public void delete() {
+        reset();
+        DATA.remove(getUUID());
     }
 
     public boolean canClaim(int level) {
-        return (this.level >= level && !rewardsClaimed.contains(level));
+        return (this.level >= level && !isClaimed(level));
     }
 }

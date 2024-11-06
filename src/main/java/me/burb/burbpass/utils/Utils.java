@@ -1,20 +1,19 @@
 package me.burb.burbpass.utils;
 
-import de.tr7zw.nbtapi.NBT;
-import de.tr7zw.nbtapi.iface.ReadWriteNBT;
-import me.burb.burbpass.api.battlepass.data.BattlePassData;
+import de.tr7zw.changeme.nbtapi.NBT;
+import de.tr7zw.changeme.nbtapi.iface.ReadWriteNBT;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.ArrayList;
+import java.util.ListIterator;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.List;
 
 public class Utils {
 
@@ -51,4 +50,30 @@ public class Utils {
         return item;
     }
 
+    public static boolean hasEnoughSpace(Player player, ItemStack item) {
+        PlayerInventory inv = player.getInventory();
+        if (inv.firstEmpty() != -1) return true;
+
+        ListIterator<ItemStack> iterator = inv.iterator(0);
+        int amount = 0;
+        while (iterator.hasNext()) {
+            ItemStack next = iterator.next();
+            if (next.isSimilar(item)) {
+                amount += (next.getMaxStackSize() - next.getAmount());
+            }
+        }
+        return amount >= item.getAmount();
+    }
+
+    public static ItemStack getHeadWithLevel(ItemStack item, int level, boolean editor) {
+        if (!editor) return item;
+        ItemStack clone = item.clone();
+        ItemMeta meta = clone.getItemMeta();
+        meta.displayName(Component.text()
+                .append(Component.text("Level ", NamedTextColor.GRAY))
+                .append(Component.text(level, NamedTextColor.GRAY))
+                .build());
+        clone.setItemMeta(meta);
+        return clone;
+    }
 }

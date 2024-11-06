@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
@@ -22,7 +23,7 @@ import java.util.function.Consumer;
  * Create custom GUIs
  * <br>Make sure to set the plugin (this is used for event listeners) see {@link #setPlugin(Plugin)}
  */
-@SuppressWarnings({"unused", "deprecation", "UnusedReturnValue"})
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class GUI implements InventoryHolder, Listener {
 
     private static Plugin PLUGIN;
@@ -181,74 +182,73 @@ public class GUI implements InventoryHolder, Listener {
     }
 
     /**
-     * Data involved when clicking a GUI slot
-     */
-    public static class InventoryData {
-
-        private final InventoryClickEvent event;
-
-        public InventoryData(InventoryClickEvent event) {
-            this.event = event;
-        }
+         * Data involved when clicking a GUI slot
+         */
+        public record InventoryData(InventoryClickEvent event) {
 
         /**
-         * Get the click event
-         *
-         * @return Click event
-         */
-        @NotNull
-        public InventoryClickEvent getEvent() {
-            return event;
-        }
+             * Get the click event
+             *
+             * @return Click event
+             */
+            @Override
+            @NotNull
+            public InventoryClickEvent event() {
+                return event;
+            }
 
-        /**
-         * Get the player who clicked
-         *
-         * @return Player who clicked
-         */
-        @NotNull
-        public Player getPlayer() {
-            return ((Player) event.getWhoClicked());
-        }
+            /**
+             * Get the player who clicked
+             *
+             * @return Player who clicked
+             */
+            @NotNull
+            public Player getPlayer() {
+                return ((Player) event.getWhoClicked());
+            }
 
-        /**
-         * Get the slot which was clicked
-         *
-         * @return Slot which was clicked
-         */
-        public int getSlot() {
-            return event.getSlot();
-        }
+            /**
+             * Get the slot which was clicked
+             *
+             * @return Slot which was clicked
+             */
+            public int getSlot() {
+                return event.getSlot();
+            }
 
-        /**
-         * Get the item which was clicked on
-         *
-         * @return Item which was clicked on
-         */
-        @Nullable
-        public ItemStack getClickedItem() {
-            return event.getCurrentItem();
-        }
+            /**
+             * Get the item which was clicked on
+             *
+             * @return Item which was clicked on
+             */
+            @Nullable
+            public ItemStack getClickedItem() {
+                return event.getCurrentItem();
+            }
 
-        /**
-         * Get the inventory action of the click
-         *
-         * @return Inventory action of the click
-         */
-        @NotNull
-        public InventoryAction getAction() {
-            return event.getAction();
-        }
+            /**
+             * Get the inventory action of the click
+             *
+             * @return Inventory action of the click
+             */
+            @NotNull
+            public InventoryAction getAction() {
+                return event.getAction();
+            }
 
-        /**
-         * Get the type of slot that was clicked
-         *
-         * @return Type of slot
-         */
-        @NotNull
-        public InventoryType.SlotType getSlotType() {
-            return event.getSlotType();
+            /**
+             * Get the type of slot that was clicked
+             *
+             * @return Type of slot
+             */
+            @NotNull
+            public InventoryType.SlotType getSlotType() {
+                return event.getSlotType();
+            }
+
+            public ClickType getClickType() {
+                return event.getClick();
+            }
         }
-    }
 
 }
