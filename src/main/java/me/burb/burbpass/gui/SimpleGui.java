@@ -24,8 +24,8 @@ public abstract class SimpleGui {
     }
 
     public void handleClick(InventoryClickEvent event) {
-        event.setCancelled(true);
         if (!inventory.equals(event.getClickedInventory())) return;
+        event.setCancelled(true);
         if (!handlerMap.containsKey(event.getSlot())) return;
         handlerMap.get(event.getSlot()).accept(event);
     }

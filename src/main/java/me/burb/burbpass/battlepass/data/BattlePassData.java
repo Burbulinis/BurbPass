@@ -1,7 +1,10 @@
 package me.burb.burbpass.battlepass.data;
 
+import me.burb.burbpass.gui.util.ItemBuilder;
+import me.burb.burbpass.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -71,7 +74,8 @@ public class BattlePassData {
     public void reset() {
         level = 0;
         progress = 0f;
-        rewardsClaimed.clear();
+        if (rewardsClaimed != null)
+            rewardsClaimed.clear();
     }
 
     public void delete() {
@@ -86,11 +90,11 @@ public class BattlePassData {
     public class Reward {
 
         public static void setReward(int key, ItemStack item) {
-            REWARDS.put(key-1, item.clone());
+            REWARDS.put(key, item.clone());
         }
 
         public static ItemStack getReward(int key) {
-            return REWARDS.get(key-1);
+            return REWARDS.get(key);
         }
 
         public static HashMap<Integer, ItemStack> getRewards() {
@@ -98,7 +102,7 @@ public class BattlePassData {
         }
 
         public static void removeReward(int key) {
-            REWARDS.remove(key-1);
+            REWARDS.remove(key);
         }
 
         public void removeClaimedReward(int... rewardsClaimed) {
@@ -126,25 +130,25 @@ public class BattlePassData {
         }
 
         public ItemStack getLevelReward(int level) {
-            return getReward(level-1);
+            return getReward(level);
         }
 
         public ItemStack getLevelFormattedReward(int level, boolean editor) {
-            return getFormatted(level-1, editor);
+            return getFormatted(level, editor);
         }
 
         private ItemStack getFormatted(int level, boolean editor) {
             if (getReward(level) == null) return null;
             ItemStack clone = getReward(level).clone();
-            System.out.println(level);
-            System.out.println(getReward(level));
-            System.out.println(clone);
+            ItemBuilder builder = new ItemBuilder(clone);
 
-            Component name = clone.displayName()
+            Component name = Utils.getDisplayName(clone)
                     .append(Component.text(" [", NamedTextColor.GOLD))
                     .append(Component.text("ʟᴠʟ ", NamedTextColor.YELLOW))
                     .append(Component.text(level, NamedTextColor.YELLOW))
                     .append(Component.text(']', NamedTextColor.GOLD));
+
+            builder.name(name);
 
             Component progress = Component.text()
                     .append(Component.text("ᴘʀᴏɢʀᴇss: ", NamedTextColor.YELLOW))
@@ -155,7 +159,7 @@ public class BattlePassData {
             Component claim;
             if (isClaimed(level)) claim = Component.text("ᴄʟᴀɪᴍᴇᴅ", NamedTextColor.GRAY);
             else if (canClaim(level)) claim = Component.text("ɴᴏᴛ ᴄʟᴀɪᴍᴇᴅ", NamedTextColor.GREEN);
-            else claim = Component.text("ᴄᴀɴɴᴏᴛ ᴄʟᴀɪᴍ", NamedTextColor.RED);
+            else claim = Component.text("ᴄᴀɴɴᴏᴛ ᴄʟᴀɪᴍ", NamedTextColor.RED, TextDecoration.ITALIC );
 
             if (editor) {
                 progress = Component.text("ʏᴏᴜ ᴀʀᴇ ᴇᴅɪᴛɪɴɢ ᴛʜᴇ ʙᴀᴛᴛʟᴇᴘᴀss", NamedTextColor.GRAY);
@@ -166,16 +170,9 @@ public class BattlePassData {
                         .append(Component.text("ᴛᴏ ʀᴇᴍᴏᴠᴇ", NamedTextColor.GRAY))
                         .build();
             }
+            builder.addLore(progress, claim);
 
-            ItemMeta meta = clone.getItemMeta();
-            meta.displayName(name);
-            List<Component> lore = meta.lore();
-            if (lore == null) lore = new ArrayList<>();
-            lore.add(progress);
-            lore.add(claim);
-            clone.lore(lore);
-            clone.setItemMeta(meta);
-            return clone;
+            return builder.build();
         }
     }
 }

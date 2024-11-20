@@ -17,6 +17,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -46,15 +47,16 @@ public class BurbPass extends JavaPlugin {
             return new String[]{"info"};
         })));
         playerArg.add(new PlayerArgument("player").replaceSuggestions(ArgumentSuggestions.strings(info -> {
-            if (info.previousArgs().getOptional("info").isEmpty()) return new String[0];
+            if (info.previousArgs().getOptional(Arrays.toString(new String[]{"info", "reset"})).isEmpty()) return new String[0];
             return Bukkit.getOnlinePlayers().stream()
-                    .map(p -> p.getUniqueId().toString())
+                    .map(Player::getName)
                     .toList().toArray(new String[0]);
         })));
 
         new CommandAPICommand("battlepass")
+                .withAliases("bp")
                 .withOptionalArguments(arguments)
-                .withOptionalArguments(playerArg)
+                .withOptionalArguments(new PlayerArgument("player"))
                 .executesPlayer((player, args) -> {
                     Object arg = args.get("value");
                     BattlePassData data = BattlePassData.getOrCreateData(player.getUniqueId());
@@ -62,23 +64,36 @@ public class BurbPass extends JavaPlugin {
                     if (arg == null)
                         battlePass.open(1, false);
                     else if (arg.equals("edit")) {
-                        if (!player.isOp()) return;
+                        if (!player.hasPermission("battlepass.edit")) return;
                         battlePass.open(1, true);
                     }
-                    else if (arg.equals("reset") || arg.equals("set")) {
-                        if (!player.isOp()) return;
+                    else if (arg.equals("reset")) {
+                        if (!player.hasPermission("battlepass.edit")) return;
+                        Player player1 = null;
                         Object target = args.get("player");
-                        if (args.get("player") == null) data.reset();
-                        else data.reset();
+                        if (target == null) data.reset();
+                        else {
+                            player1 = (Player) target;
+                            BattlePassData.getOrCreateData(player1.getUniqueId()).reset();
+                        }
 
                         player.sendMessage(Component.text()
                                 .append(Component.text("Successfully reset the data of ", NamedTextColor.GREEN))
-                                .append(Component.text(target == null ? player.getName() : (Bukkit.getPlayer(UUID.fromString(target.toString()))).getName(), NamedTextColor.GREEN))
+                                .append(Component.text(player1 == null ? player.getName() : player1.getName(), NamedTextColor.GREEN))
                                 .build());
                     }
                     else if (arg.equals("wipe")) {
-                        if (!player.isOp()) return;
-                        BattlePassData.getAllData().values().forEach(BattlePassData::delete);
+                        if (!player.hasPermission("battlepass.edit")) return;
+                        List<BattlePassData> dataList = BattlePassData.getAllData().values().stream().toList();
+                        BattlePassData.getAllData().clear();
+                        BattlePassData.Reward.getRewards().clear();
+
+                        for (BattlePassData battlePassData : dataList) {
+                            BattlePassData.Reward reward = battlePassData.getRewardInstance();
+                            if (reward.getClaimedRewards() == null) continue;
+                            reward.getClaimedRewards().clear();
+                        }
+
                         player.sendMessage(Component.text("Successfully wiped all data", NamedTextColor.GREEN));
                     }
                 })

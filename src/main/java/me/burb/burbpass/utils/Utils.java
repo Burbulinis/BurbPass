@@ -5,12 +5,14 @@ import de.tr7zw.changeme.nbtapi.iface.ReadWriteNBT;
 import me.burb.burbpass.gui.util.ItemBuilder;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.apache.commons.lang3.text.WordUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.Arrays;
 import java.util.ListIterator;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -37,6 +39,16 @@ public class Utils {
         return net.md_5.bungee.api.ChatColor.translateAlternateColorCodes('&', string);
     }
 
+    public static Component getDisplayName(ItemStack item) {
+        if (!item.getItemMeta().hasDisplayName()) {
+            String translationKey = item.translationKey();
+            String[] regex = translationKey.split("minecraft.");
+            String[] regex2 = regex[1].split("_");
+            return Component.text(capitalise(String.join(" ", regex2)), NamedTextColor.WHITE);
+        }
+        return item.displayName();
+    }
+
     public static ItemStack getHead(String value, Component name) {
         ItemStack item = new ItemBuilder(Material.PLAYER_HEAD). name(name).build();
         NBT.modify(item, nbt -> {
@@ -49,6 +61,27 @@ public class Utils {
                     .setString("Value", value);
         });
         return item;
+    }
+
+    public static String capitalise(String input) {
+        if (input == null || input.isEmpty()) {
+            return input;
+        }
+
+        StringBuilder result = new StringBuilder();
+        String[] words = input.split("\\s+"); // Split by spaces
+
+        for (String word : words) {
+            if (!word.isEmpty()) {
+                // Capitalize the first letter and keep the rest of the word as is
+                result.append(Character.toUpperCase(word.charAt(0)))
+                        .append(word.substring(1))
+                        .append(" "); // Add space after each word
+            }
+        }
+
+        // Trim the trailing space and return
+        return result.toString().trim();
     }
 
     public static boolean hasEnoughSpace(Player player, ItemStack item) {

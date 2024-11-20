@@ -5,7 +5,7 @@ import org.bukkit.inventory.Inventory;
 
 public abstract class PaginatedGui extends SimpleGui {
     private int maxPage;
-    private int page = 0;
+    private int page = 1;
 
     protected PaginatedGui(Player player, Inventory inventory) {
         super(player, inventory);

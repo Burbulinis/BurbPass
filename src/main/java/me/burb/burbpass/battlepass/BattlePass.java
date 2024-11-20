@@ -108,7 +108,7 @@ public class BattlePass {
                 }
 
                 if (level >= i || (i - level) == 1 || editor) {
-                    ItemStack formattedReward = rewardInstance.getLevelFormattedReward(level, editor);
+                    ItemStack formattedReward = rewardInstance.getLevelFormattedReward(i, editor);
                     inventory.setItem(slots[pos], formattedReward);
 
                     registerHandler(slots[pos], e -> {
