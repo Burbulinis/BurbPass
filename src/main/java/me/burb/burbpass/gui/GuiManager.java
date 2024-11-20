@@ -29,13 +29,13 @@ public class GuiManager implements Listener {
     }
 
     public void openGui(SimpleGui gui) {
-        if (!Bukkit.isPrimaryThread()) {
+        /*if (!Bukkit.isPrimaryThread()) {
             Bukkit.getScheduler().runTask(plugin, () -> openGui(gui));
             return;
         }
-        gui.getPlayer().closeInventory();
+        gui.getPlayer().closeInventory();*/
         guiMap.put(gui.getPlayer().getUniqueId(), gui);
-        gui.open();
+        //gui.open();
     }
 
     @EventHandler

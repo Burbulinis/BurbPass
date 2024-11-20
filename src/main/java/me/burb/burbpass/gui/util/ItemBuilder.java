@@ -12,6 +12,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.profile.PlayerTextures;
 
+import java.net.URI;
 import java.net.URL;
 import java.util.*;
 import java.util.stream.Stream;
@@ -93,7 +94,7 @@ public class ItemBuilder {
     public ItemBuilder headSkinUrl(String url) {
         if (!(meta instanceof SkullMeta skull)) return this;
         try {
-            URL u = new URL(url);
+            URL u = new URI(url).toURL();
             PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());
             PlayerTextures textures = profile.getTextures();
             textures.setSkin(u);

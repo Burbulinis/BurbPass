@@ -37,8 +37,8 @@ public class Utils {
         return net.md_5.bungee.api.ChatColor.translateAlternateColorCodes('&', string);
     }
 
-    public static ItemStack getHead(String value, String name) {
-        ItemStack item = new ItemBuilder(Material.PLAYER_HEAD). name(Component.text(name)).build();
+    public static ItemStack getHead(String value, Component name) {
+        ItemStack item = new ItemBuilder(Material.PLAYER_HEAD). name(name).build();
         NBT.modify(item, nbt -> {
             ReadWriteNBT skullOwnerCompound = nbt.getOrCreateCompound("SkullOwner");
 

@@ -13,11 +13,7 @@ public class BattlePassData {
     private static final HashMap<UUID, BattlePassData> DATA = new HashMap<>();
 
     public static BattlePassData getOrCreateData(UUID uuid) {
-        return DATA.computeIfAbsent(uuid, k -> {
-            BattlePassData data = new BattlePassData(k, 0, 0, null);
-            DATA.put(k, data);
-            return data;
-        });
+        return DATA.computeIfAbsent(uuid, k -> new BattlePassData(k, 0, 0, null));
     }
 
     public static HashMap<UUID, BattlePassData> getAllData() {

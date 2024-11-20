@@ -1,12 +1,15 @@
 package me.burb.burbpass.battlepass;
 
+import me.burb.burbpass.BurbPass;
 import me.burb.burbpass.battlepass.data.BattlePassData;
 import me.burb.burbpass.gui.PaginatedGui;
+import me.burb.burbpass.gui.util.ItemBuilder;
 import me.burb.burbpass.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
@@ -54,8 +57,10 @@ public class BattlePass {
         protected void render() {
             int page = getPage();
 
-            ItemStack goBack = Utils.getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2EyYzEyY2IyMjkxODM4NGUwYTgxYzgyYTFlZDk5YWViZGNlOTRiMmVjMjc1NDgwMDk3MjMxOWI1NzkwMGFmYiJ9fX0=", "&b <- ᴘᴀɢᴇ " + (page - 1));
-            ItemStack goForward = Utils.getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjkxYWM0MzJhYTQwZDdlN2E2ODdhYTg1MDQxZGU2MzY3MTJkNGYwMjI2MzJkZDUzNTZjODgwNTIxYWYyNzIzYSJ9fX0=", "&bᴘᴀɢᴇ " + (page+1) + " ->");
+            fillInventory(new ItemBuilder(Material.BLACK_STAINED_GLASS_PANE).name(Component.empty()).build());
+
+            ItemStack goBack = Utils.getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2EyYzEyY2IyMjkxODM4NGUwYTgxYzgyYTFlZDk5YWViZGNlOTRiMmVjMjc1NDgwMDk3MjMxOWI1NzkwMGFmYiJ9fX0=", Component.text("<- ᴘʀᴇᴠɪᴏᴜs ᴘᴀɢᴇ", NamedTextColor.AQUA));
+            ItemStack goForward = Utils.getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjkxYWM0MzJhYTQwZDdlN2E2ODdhYTg1MDQxZGU2MzY3MTJkNGYwMjI2MzJkZDUzNTZjODgwNTIxYWYyNzIzYSJ9fX0=", Component.text("ɴᴇxᴛ ᴘᴀɢᴇ ->", NamedTextColor.AQUA));
 
             BattlePassData.Reward rewardInstance = data.getRewardInstance();
 
@@ -76,8 +81,8 @@ public class BattlePass {
                 slots = new int[]{10,11,12,13,14,15,16,22};
             }
 
-            ItemStack emptyHead = Utils.getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjcwNWZkOTRhMGM0MzE5MjdmYjRlNjM5YjBmY2ZiNDk3MTdlNDEyMjg1YTAyYjQzOWUwMTEyZGEyMmIyZTJlYyJ9fX0=", " ");
-            inventory.setItem(49, Utils.getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmViNTg4YjIxYTZmOThhZDFmZjRlMDg1YzU1MmRjYjA1MGVmYzljYWI0MjdmNDYwNDhmMThmYzgwMzQ3NWY3In19fQ==", "&cᴇxɪᴛ"));
+            ItemStack emptyHead = Utils.getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjcwNWZkOTRhMGM0MzE5MjdmYjRlNjM5YjBmY2ZiNDk3MTdlNDEyMjg1YTAyYjQzOWUwMTEyZGEyMmIyZTJlYyJ9fX0=", Component.empty());
+            inventory.setItem(49, Utils.getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmViNTg4YjIxYTZmOThhZDFmZjRlMDg1YzU1MmRjYjA1MGVmYzljYWI0MjdmNDYwNDhmMThmYzgwMzQ3NWY3In19fQ==", Component.text("ᴇxɪᴛ", NamedTextColor.RED)));
             registerHandler(49, e -> e.getWhoClicked().closeInventory());
 
 
@@ -90,7 +95,7 @@ public class BattlePass {
 
                 if (reward == null) {
 
-                    inventory.setItem(slots[pos], Utils.getHeadWithLevel(emptyHead, level, editor));
+                    inventory.setItem(slots[pos], Utils.getHeadWithLevel(emptyHead, i, editor));
                     registerHandler(slots[pos], e -> {
                         if (!editor) return;
                         if (player.getItemOnCursor().isEmpty()) return;

@@ -1,5 +1,6 @@
 package me.burb.burbpass.gui;
 
+import me.burb.burbpass.BurbPass;
 import me.burb.burbpass.gui.util.SlotUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -47,6 +48,7 @@ public abstract class SimpleGui {
     public void open() {
         render();
         player.openInventory(inventory);
+        BurbPass.getGuiManager().openGui(this);
     }
 
     public Player getPlayer() {
