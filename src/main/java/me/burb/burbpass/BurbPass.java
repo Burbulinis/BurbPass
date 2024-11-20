@@ -7,9 +7,9 @@ import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.ArgumentSuggestions;
 import dev.jorel.commandapi.arguments.PlayerArgument;
 import dev.jorel.commandapi.arguments.StringArgument;
-import me.burb.burbpass.api.battlepass.BattlePass;
-import me.burb.burbpass.api.battlepass.data.BattlePassData;
-import me.burb.burbpass.utils.GUI;
+import me.burb.burbpass.battlepass.BattlePass;
+import me.burb.burbpass.battlepass.data.BattlePassData;
+import me.burb.burbpass.gui.GuiManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -22,12 +22,18 @@ import java.util.UUID;
 
 public class BurbPass extends JavaPlugin {
 
-    public static BurbPass plugin;
+    private static GuiManager GUI_MANAGER;
+    private static BurbPass INSTANCE;
+
+    public static BurbPass getInstance() { return INSTANCE; }
+
+    public static GuiManager getGuiManager() { return GUI_MANAGER; }
 
     @Override
     public void onEnable() {
-        plugin = this;
-        GUI.setPlugin(this);
+        INSTANCE = this;
+
+        GUI_MANAGER = new GuiManager(this);
 
         CommandAPI.onLoad(new CommandAPIBukkitConfig(this));
         CommandAPI.onEnable();
@@ -51,16 +57,19 @@ public class BurbPass extends JavaPlugin {
                 .withOptionalArguments(playerArg)
                 .executesPlayer((player, args) -> {
                     Object arg = args.get("value");
-                    if (arg == null) BattlePass.open(1, BattlePassData.getDataOrDefault(player.getUniqueId()), false);
+                    BattlePassData data = BattlePassData.getOrCreateData(player.getUniqueId());
+                    BattlePass battlePass = new BattlePass(data);
+                    if (arg == null)
+                        battlePass.open(1, false);
                     else if (arg.equals("edit")) {
                         if (!player.isOp()) return;
-                        BattlePass.open(1, BattlePassData.getDataOrDefault(player.getUniqueId()), true);
+                        battlePass.open(1, true);
                     }
                     else if (arg.equals("reset") || arg.equals("set")) {
                         if (!player.isOp()) return;
                         Object target = args.get("player");
-                        if (args.get("player") == null) BattlePassData.getDataOrDefault(player.getUniqueId()).reset();
-                        else BattlePassData.getDataOrDefault(UUID.fromString(target.toString())).reset();
+                        if (args.get("player") == null) data.reset();
+                        else data.reset();
 
                         player.sendMessage(Component.text()
                                 .append(Component.text("Successfully reset the data of ", NamedTextColor.GREEN))
@@ -74,6 +83,5 @@ public class BurbPass extends JavaPlugin {
                     }
                 })
                 .register();
-
     }
 }

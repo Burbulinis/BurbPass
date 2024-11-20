@@ -2,6 +2,7 @@ package me.burb.burbpass.utils;
 
 import de.tr7zw.changeme.nbtapi.NBT;
 import de.tr7zw.changeme.nbtapi.iface.ReadWriteNBT;
+import me.burb.burbpass.gui.util.ItemBuilder;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
@@ -37,7 +38,7 @@ public class Utils {
     }
 
     public static ItemStack getHead(String value, String name) {
-        ItemStack item = ItemBuilder.builder(Material.PLAYER_HEAD).name(name).item();
+        ItemStack item = new ItemBuilder(Material.PLAYER_HEAD). name(Component.text(name)).build();
         NBT.modify(item, nbt -> {
             ReadWriteNBT skullOwnerCompound = nbt.getOrCreateCompound("SkullOwner");
 
