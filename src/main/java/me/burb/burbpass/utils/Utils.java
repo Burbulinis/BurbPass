@@ -23,7 +23,8 @@ public class Utils {
     private static final String PREFIX = "&7[&bBURB&3PASS&7] ";
     private static final Pattern HEX_PATTERN = Pattern.compile("<#([A-Fa-f\\d]){6}>");
     public static String format(float f) {
-        return String.format("%%,.0f", f);
+        if (f == 0) return "0";
+        return String.format("%,.0f", f);
     }
 
     @SuppressWarnings("deprecation") // Paper deprecation

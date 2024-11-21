@@ -3,9 +3,7 @@ package me.burb.burbpass;
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPIBukkitConfig;
 import dev.jorel.commandapi.CommandAPICommand;
-import dev.jorel.commandapi.arguments.Argument;
-import dev.jorel.commandapi.arguments.ArgumentSuggestions;
-import dev.jorel.commandapi.arguments.StringArgument;
+import dev.jorel.commandapi.arguments.*;
 import me.burb.burbpass.battlepass.BattlePass;
 import me.burb.burbpass.battlepass.data.BattlePassData;
 import me.burb.burbpass.gui.GuiManager;
@@ -20,6 +18,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import javax.naming.Name;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class BurbPass extends JavaPlugin {
 
@@ -44,24 +43,25 @@ public class BurbPass extends JavaPlugin {
         CommandAPI.onEnable();
 
         List<Argument<?>> arguments = new ArrayList<>();
-        List<Argument<?>> playerArg = new ArrayList<>();
         arguments.add(new StringArgument("value").replaceSuggestions(ArgumentSuggestions.strings(info -> {
             Player player = (Player) info.sender();
             if (player.hasPermission("battlepass.edit")) return new String[]{"info", "edit", "reset", "wipe"};
             return new String[]{"info"};
         })));
-        playerArg.add(new StringArgument("player").replaceSuggestions(ArgumentSuggestions.strings(info -> {
-            if (info.previousArgs().get("info") == null && info.previousArgs().get("reset") == null)
-                return new String[0];
+
+        arguments.add(new PlayerArgument("player").replaceSuggestions(ArgumentSuggestions.strings(info -> {
+            boolean arg = info.previousArgs().getOptional("value").toString().equals("info");
+            boolean arg2 = info.previousArgs().getOptional("value").toString().equals("reset");
+            if (arg && arg2) return new String[0];
+
             return Bukkit.getOnlinePlayers().stream()
                     .map(Player::getName)
-                    .toList().toArray(new String[0]);
+                    .toArray(String[]::new);
         })));
 
         new CommandAPICommand("battlepass")
                 .withAliases("bp")
                 .withOptionalArguments(arguments)
-                .withOptionalArguments(playerArg)
                 .executesPlayer((player, args) -> {
                     Object arg = args.get("value");
                     BattlePassData data = BattlePassData.getOrCreateData(player.getUniqueId());
@@ -72,13 +72,9 @@ public class BurbPass extends JavaPlugin {
                         return;
                     }
 
-                    Player playerToReset = null;
-
-                    Object target = args.get("player");
+                    Player target = (Player) args.get("player");
                     if (target != null) {
-                        playerToReset = Bukkit.getPlayer(args.toString());
-                        if (playerToReset == null) return;
-                        data = BattlePassData.getOrCreateData(playerToReset.getUniqueId());
+                        data = BattlePassData.getOrCreateData(target.getUniqueId());
                     }
 
                     switch (arg.toString()) {
@@ -88,7 +84,7 @@ public class BurbPass extends JavaPlugin {
                             final float progressPercentage = (progress / ((50^2)*64))*100;
                             final float percent = data.getPercent();
 
-                            if (playerToReset != null) player.sendMessage(Component.text("BATTLEPASS INFO OF " + playerToReset.getName() + ':', NamedTextColor.GREEN, TextDecoration.BOLD));
+                            if (target != null) player.sendMessage(Component.text("BATTLEPASS INFO OF " + target.getName() + ':', NamedTextColor.GREEN, TextDecoration.BOLD));
                             else player.sendMessage(Component.text("YOUR BATTLEPASS INFO:", NamedTextColor.GREEN, TextDecoration.BOLD));
 
                             player.sendMessage(Component.text()
@@ -103,14 +99,14 @@ public class BurbPass extends JavaPlugin {
                             if (level < 50) {
                                 player.sendMessage(" ");
                                 if (level < 49) player.sendMessage(Component.text()
-                                        .append(Component.text("  " + percent, NamedTextColor.GREEN))
-                                        .append(Component.text(" into reaching the next Level! (", NamedTextColor.YELLOW))
-                                        .append(Component.text("Level " + level+1, NamedTextColor.GREEN))
+                                        .append(Component.text("  " + (percent == 0 ? "0" : percent) + "% ", NamedTextColor.GREEN))
+                                        .append(Component.text("into reaching the next Level! (", NamedTextColor.YELLOW))
+                                        .append(Component.text("Level " + (level+1), NamedTextColor.GREEN))
                                         .append(Component.text(')', NamedTextColor.YELLOW))
                                         .build());
                                 player.sendMessage(Component.text()
-                                        .append(Component.text("  " + progressPercentage, NamedTextColor.GREEN))
-                                        .append(Component.text(" into reaching ", NamedTextColor.YELLOW))
+                                        .append(Component.text("  " + (progressPercentage == 0 ? "0" : progressPercentage) + "% ", NamedTextColor.GREEN))
+                                        .append(Component.text("into reaching ", NamedTextColor.YELLOW))
                                         .append(Component.text("Level 50", NamedTextColor.GREEN))
                                         .append(Component.text('!', NamedTextColor.YELLOW))
                                         .build());
@@ -128,7 +124,7 @@ public class BurbPass extends JavaPlugin {
                             data.reset();
                             player.sendMessage(Component.text()
                                     .append(Component.text("Successfully reset the data of ", NamedTextColor.GREEN))
-                                    .append(Component.text(playerToReset == null ? player.getName() : playerToReset.getName(), NamedTextColor.GREEN))
+                                    .append(Component.text(target == null ? player.getName() : target.getName(), NamedTextColor.GREEN))
                                     .build());
                         }
                         case "wipe" -> {
