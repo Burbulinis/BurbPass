@@ -5,21 +5,21 @@ import dev.jorel.commandapi.CommandAPIBukkitConfig;
 import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.arguments.ArgumentSuggestions;
-import dev.jorel.commandapi.arguments.PlayerArgument;
 import dev.jorel.commandapi.arguments.StringArgument;
 import me.burb.burbpass.battlepass.BattlePass;
 import me.burb.burbpass.battlepass.data.BattlePassData;
 import me.burb.burbpass.gui.GuiManager;
+import me.burb.burbpass.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import javax.naming.Name;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 
 public class BurbPass extends JavaPlugin {
 
@@ -36,6 +36,10 @@ public class BurbPass extends JavaPlugin {
 
         GUI_MANAGER = new GuiManager(this);
 
+        registerCommands();
+    }
+
+    private void registerCommands() {
         CommandAPI.onLoad(new CommandAPIBukkitConfig(this));
         CommandAPI.onEnable();
 
@@ -46,8 +50,9 @@ public class BurbPass extends JavaPlugin {
             if (player.hasPermission("battlepass.edit")) return new String[]{"info", "edit", "reset", "wipe"};
             return new String[]{"info"};
         })));
-        playerArg.add(new PlayerArgument("player").replaceSuggestions(ArgumentSuggestions.strings(info -> {
-            if (info.previousArgs().getOptional(Arrays.toString(new String[]{"info", "reset"})).isEmpty()) return new String[0];
+        playerArg.add(new StringArgument("player").replaceSuggestions(ArgumentSuggestions.strings(info -> {
+            if (info.previousArgs().get("info") == null && info.previousArgs().get("reset") == null)
+                return new String[0];
             return Bukkit.getOnlinePlayers().stream()
                     .map(Player::getName)
                     .toList().toArray(new String[0]);
@@ -56,45 +61,89 @@ public class BurbPass extends JavaPlugin {
         new CommandAPICommand("battlepass")
                 .withAliases("bp")
                 .withOptionalArguments(arguments)
-                .withOptionalArguments(new PlayerArgument("player"))
+                .withOptionalArguments(playerArg)
                 .executesPlayer((player, args) -> {
                     Object arg = args.get("value");
                     BattlePassData data = BattlePassData.getOrCreateData(player.getUniqueId());
-                    BattlePass battlePass = new BattlePass(data);
-                    if (arg == null)
+                    final BattlePass battlePass = new BattlePass(data);
+
+                    if (arg == null) {
                         battlePass.open(1, false);
-                    else if (arg.equals("edit")) {
-                        if (!player.hasPermission("battlepass.edit")) return;
-                        battlePass.open(1, true);
+                        return;
                     }
-                    else if (arg.equals("reset")) {
-                        if (!player.hasPermission("battlepass.edit")) return;
-                        Player player1 = null;
-                        Object target = args.get("player");
-                        if (target == null) data.reset();
-                        else {
-                            player1 = (Player) target;
-                            BattlePassData.getOrCreateData(player1.getUniqueId()).reset();
+
+                    Player playerToReset = null;
+
+                    Object target = args.get("player");
+                    if (target != null) {
+                        playerToReset = Bukkit.getPlayer(args.toString());
+                        if (playerToReset == null) return;
+                        data = BattlePassData.getOrCreateData(playerToReset.getUniqueId());
+                    }
+
+                    switch (arg.toString()) {
+                        case "info" -> {
+                            final int level = data.getLevel();
+                            final float progress = data.getProgress();
+                            final float progressPercentage = (progress / ((50^2)*64))*100;
+                            final float percent = data.getPercent();
+
+                            if (playerToReset != null) player.sendMessage(Component.text("BATTLEPASS INFO OF " + playerToReset.getName() + ':', NamedTextColor.GREEN, TextDecoration.BOLD));
+                            else player.sendMessage(Component.text("YOUR BATTLEPASS INFO:", NamedTextColor.GREEN, TextDecoration.BOLD));
+
+                            player.sendMessage(Component.text()
+                                    .append(Component.text("  Level:", NamedTextColor.YELLOW))
+                                    .append(Component.text(" Level " + level, NamedTextColor.GREEN))
+                                    .append(Component.text('!', NamedTextColor.YELLOW))
+                                    .appendNewline()
+                                    .append(Component.text("  Mining XP: ", NamedTextColor.YELLOW))
+                                    .append(Component.text(Utils.format(progress) + " XP", NamedTextColor.GREEN))
+                                    .build());
+
+                            if (level < 50) {
+                                player.sendMessage(" ");
+                                if (level < 49) player.sendMessage(Component.text()
+                                        .append(Component.text("  " + percent, NamedTextColor.GREEN))
+                                        .append(Component.text(" into reaching the next Level! (", NamedTextColor.YELLOW))
+                                        .append(Component.text("Level " + level+1, NamedTextColor.GREEN))
+                                        .append(Component.text(')', NamedTextColor.YELLOW))
+                                        .build());
+                                player.sendMessage(Component.text()
+                                        .append(Component.text("  " + progressPercentage, NamedTextColor.GREEN))
+                                        .append(Component.text(" into reaching ", NamedTextColor.YELLOW))
+                                        .append(Component.text("Level 50", NamedTextColor.GREEN))
+                                        .append(Component.text('!', NamedTextColor.YELLOW))
+                                        .build());
+                            }
                         }
 
-                        player.sendMessage(Component.text()
-                                .append(Component.text("Successfully reset the data of ", NamedTextColor.GREEN))
-                                .append(Component.text(player1 == null ? player.getName() : player1.getName(), NamedTextColor.GREEN))
-                                .build());
-                    }
-                    else if (arg.equals("wipe")) {
-                        if (!player.hasPermission("battlepass.edit")) return;
-                        List<BattlePassData> dataList = BattlePassData.getAllData().values().stream().toList();
-                        BattlePassData.getAllData().clear();
-                        BattlePassData.Reward.getRewards().clear();
-
-                        for (BattlePassData battlePassData : dataList) {
-                            BattlePassData.Reward reward = battlePassData.getRewardInstance();
-                            if (reward.getClaimedRewards() == null) continue;
-                            reward.getClaimedRewards().clear();
+                        case "edit" -> {
+                            if (!player.hasPermission("battlepass.edit")) return;
+                            battlePass.open(1, true);
                         }
 
-                        player.sendMessage(Component.text("Successfully wiped all data", NamedTextColor.GREEN));
+                        case "reset" -> {
+                            if (!player.hasPermission("battlepass.edit")) return;
+
+                            data.reset();
+                            player.sendMessage(Component.text()
+                                    .append(Component.text("Successfully reset the data of ", NamedTextColor.GREEN))
+                                    .append(Component.text(playerToReset == null ? player.getName() : playerToReset.getName(), NamedTextColor.GREEN))
+                                    .build());
+                        }
+                        case "wipe" -> {
+                            if (!player.hasPermission("battlepass.edit")) return;
+
+                            List<BattlePassData> dataList = BattlePassData.getAllData().values().stream().toList();
+                            BattlePassData.getAllData().clear();
+                            BattlePassData.Reward.getRewards().clear();
+                            for (BattlePassData battlePassData : dataList) {
+                                BattlePassData.Reward reward = battlePassData.getRewardInstance();
+                                if (reward.getClaimedRewards() == null) continue;
+                                reward.getClaimedRewards().clear();
+                            }
+                            player.sendMessage(Component.text("Successfully wiped all data", NamedTextColor.GREEN));
+                        }
                     }
                 })
                 .register();
