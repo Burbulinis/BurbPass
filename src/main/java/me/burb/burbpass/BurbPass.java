@@ -12,6 +12,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -50,13 +51,13 @@ public class BurbPass extends JavaPlugin {
         })));
 
         arguments.add(new PlayerArgument("player").replaceSuggestions(ArgumentSuggestions.strings(info -> {
-            boolean arg = info.previousArgs().getOptional("value").toString().equals("info");
-            boolean arg2 = info.previousArgs().getOptional("value").toString().equals("reset");
-            if (arg && arg2) return new String[0];
-
-            return Bukkit.getOnlinePlayers().stream()
-                    .map(Player::getName)
-                    .toArray(String[]::new);
+            if (info.previousArgs().getOptional("value").isEmpty()) return new String[0];
+            String arg = (String) info.previousArgs().getOptional("value").get();
+            if (arg.equals("info") || arg.equals("reset"))
+                return Bukkit.getOnlinePlayers().stream()
+                        .map(Player::getName)
+                        .toArray(String[]::new);
+            return new String[0];
         })));
 
         new CommandAPICommand("battlepass")
